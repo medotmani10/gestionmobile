@@ -18,6 +18,7 @@ const Invoices: React.FC = () => {
   const [selectedClientId, setSelectedClientId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [saving, setSaving] = useState(false);
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInvoices();
@@ -53,7 +54,7 @@ const Invoices: React.FC = () => {
   }
 
   async function fetchClients() {
-    const { data } = await supabase.from('clients').select('id, name');
+    const { data } = await supabase.from('clients').select('id, name, address, phone');
     if (data) setClients(data as any);
   }
 
@@ -116,9 +117,10 @@ const Invoices: React.FC = () => {
   };
 
   const handleConvertToFinal = async (id: string) => {
-    if (!window.confirm('هل أنت متأكد من اعتماد هذه الفاتورة وتحويلها إلى فاتورة نهائية؟ سيتم تغيير حالتها إلى "معلقة".')) return;
+    if (!window.confirm('هل أنت متأكد من اعتماد هذه الفاتورة وتحويلها إلى فاتورة نهائية؟')) return;
     
     try {
+      // 1. تحديث قاعدة البيانات
       const { error } = await supabase
         .from('invoices')
         .update({ 
@@ -128,10 +130,173 @@ const Invoices: React.FC = () => {
         .eq('id', id);
 
       if (error) throw error;
+      
+      // 2. تحديث الواجهة فوراً (تحديث الحالة والنوع محلياً)
+      setInvoices(currentInvoices => 
+        currentInvoices.map(inv => 
+          inv.id === id 
+            ? { ...inv, type: 'ضريبية', status: 'معلقة' } 
+            : inv
+        )
+      );
+
+      // 3. إعادة تحميل البيانات للتأكد من المزامنة (اختياري لكن مفضل)
       fetchInvoices();
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error converting invoice:', error);
-      alert('فشل تحويل الفاتورة');
+      alert('فشل عملية التحويل: ' + error.message);
+    }
+  };
+
+  const handlePrintInvoice = async (invoiceId: string) => {
+    // 1. Open Print Window IMMEDIATELY to avoid popup blockers
+    const printWindow = window.open('', '_blank', 'width=900,height=1000');
+    if (!printWindow) return alert('يرجى السماح بالنوافذ المنبثقة لطباعة الفاتورة');
+
+    // Show loading state in the new window
+    printWindow.document.write('<html dir="rtl"><body style="font-family:sans-serif;text-align:center;padding:50px;"><h3>جاري تحضير الفاتورة...</h3><p>يرجى الانتظار</p></body></html>');
+
+    try {
+      setPrintingId(invoiceId);
+      
+      // 2. Fetch full invoice details
+      const { data: invoiceData, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          clients (name, address, phone),
+          invoice_items (*)
+        `)
+        .eq('id', invoiceId)
+        .single();
+
+      if (error) throw error;
+
+      const client = invoiceData.clients;
+      const invItems = invoiceData.invoice_items;
+      const isProforma = invoiceData.type === 'شكلية';
+      const title = isProforma ? 'فاتورة شكلية / Proforma Invoice' : 'فاتورة / Invoice';
+
+      // 3. Generate HTML
+      const htmlContent = `
+        <html dir="rtl" lang="ar">
+        <head>
+          <title>${title} #${invoiceData.id.substring(0, 8)}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+          <style>
+            body { font-family: 'Tajawal', sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: 0 auto; }
+            .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+            .company-info h1 { margin: 0; color: #2563eb; font-size: 24px; }
+            .company-info p { margin: 5px 0; font-size: 12px; color: #64748b; }
+            .invoice-meta { text-align: left; }
+            .invoice-meta h2 { margin: 0; color: #0f172a; font-size: 20px; text-transform: uppercase; }
+            .invoice-meta p { margin: 5px 0; font-size: 12px; color: #64748b; }
+            
+            .client-box { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
+            .client-box h3 { margin: 0 0 10px; font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+            .client-box p { margin: 3px 0; font-weight: bold; font-size: 14px; }
+            
+            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            th { background: #f1f5f9; padding: 12px; text-align: right; font-weight: bold; font-size: 12px; border-bottom: 2px solid #e2e8f0; }
+            td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+            .totals { width: 300px; margin-right: auto; }
+            .totals-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+            .totals-row.final { border-bottom: none; border-top: 2px solid #0f172a; margin-top: 10px; padding-top: 15px; font-weight: bold; font-size: 16px; }
+            
+            .footer { margin-top: 60px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+            
+            @media print {
+              body { padding: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-top">
+            <div class="company-info">
+              <h1>بناء برو للإنشاءات</h1>
+              <p>الجزائر العاصمة، الجزائر</p>
+              <p>هاتف: 0550000000 | ايميل: info@binaapro.dz</p>
+              <p>رقم السجل التجاري: 123456789</p>
+            </div>
+            <div class="invoice-meta">
+              <h2>${title}</h2>
+              <p>رقم الفاتورة: <strong>#${invoiceData.id.substring(0, 8)}</strong></p>
+              <p>التاريخ: ${new Date(invoiceData.date).toLocaleDateString('ar-DZ')}</p>
+              ${invoiceData.due_date ? `<p>تاريخ الاستحقاق: ${invoiceData.due_date}</p>` : ''}
+              <p>الحالة: ${invoiceData.status}</p>
+            </div>
+          </div>
+
+          <div class="client-box">
+            <h3>بيانات العميل</h3>
+            <p>${client?.name}</p>
+            <p style="font-weight: normal; font-size: 12px;">${client?.address || ''}</p>
+            <p style="font-weight: normal; font-size: 12px;">${client?.phone || ''}</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 50%">الوصف / الخدمة</th>
+                <th style="width: 10%">الوحدة</th>
+                <th style="width: 10%">الكمية</th>
+                <th style="width: 15%">سعر الوحدة</th>
+                <th style="width: 15%">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invItems.map((item: any) => `
+                <tr>
+                  <td>${item.description}</td>
+                  <td>${item.unit}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.unit_price.toLocaleString()}</td>
+                  <td style="font-weight: bold;">${item.total.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="totals">
+            <div class="totals-row">
+              <span>المجموع الفرعي (HT)</span>
+              <span>${invoiceData.amount.toLocaleString()} ${CURRENCY}</span>
+            </div>
+            <div class="totals-row">
+              <span>الضريبة (TVA 19%)</span>
+              <span>${invoiceData.tax.toLocaleString()} ${CURRENCY}</span>
+            </div>
+            <div class="totals-row final">
+              <span>الإجمالي (TTC)</span>
+              <span>${invoiceData.total.toLocaleString()} ${CURRENCY}</span>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>نشكركم على تعاملكم معنا.</p>
+            <p>تم استخراج هذه الفاتورة إلكترونياً عبر نظام بناء برو.</p>
+          </div>
+
+          <script>
+            setTimeout(function() { window.print(); }, 500);
+          </script>
+        </body>
+        </html>
+      `;
+
+      // 4. Update the window content
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+    } catch (error) {
+      printWindow.close(); // Close if error
+      console.error('Print error:', error);
+      alert('حدث خطأ أثناء إعداد الطباعة');
+    } finally {
+      setPrintingId(null);
     }
   };
 
@@ -346,7 +511,7 @@ const Invoices: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 font-medium text-slate-700">{inv.client}</td>
                   <td className="px-6 py-4 font-bold text-slate-900">{inv.amount.toLocaleString()} {CURRENCY}</td>
-                  <td className="px-6 py-4 text-slate-400 text-xs">{inv.date}</td>
+                  <td className="px-6 py-4 text-slate-400 text-xs">{new Date(inv.date).toLocaleDateString('ar-DZ')}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         inv.status === 'مدفوعة بالكامل' ? 'bg-green-100 text-green-700' : 
@@ -366,9 +531,24 @@ const Invoices: React.FC = () => {
                           <FileCheck size={16}/>
                         </button>
                       )}
-                      <button title="تحميل" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Download size={16}/></button>
-                      <button title="طباعة" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"><Printer size={16}/></button>
-                      <button title="عرض التفاصيل" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><ChevronRight size={16}/></button>
+                      
+                      <button 
+                        onClick={() => handlePrintInvoice(inv.id)}
+                        disabled={printingId === inv.id}
+                        title="تحميل PDF" 
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                      >
+                         {printingId === inv.id ? <Loader2 className="animate-spin" size={16}/> : <Download size={16}/>}
+                      </button>
+                      
+                      <button 
+                        onClick={() => handlePrintInvoice(inv.id)}
+                        title="طباعة" 
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+                      >
+                        <Printer size={16}/>
+                      </button>
+                      
                     </div>
                   </td>
                 </tr>
