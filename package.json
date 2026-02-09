@@ -11,6 +11,6 @@
   },
   "scripts": {
     "start": "serve .",
-    "build": "echo 'No build step needed for static ESM app'"
+    "build": "mkdir -p public && cp -rf components constants.tsx types.ts App.tsx index.tsx index.html vercel.json supabase.ts public/"
   }
 }
