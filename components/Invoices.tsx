@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Download, Printer, Filter, Trash2, Save, FileText, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, Download, Printer, Filter, Trash2, Save, FileText, ChevronRight, Loader2, FileCheck } from 'lucide-react';
 import { Invoice, InvoiceItem, InvoiceType, Client } from '../types';
 import { supabase } from '../supabase';
 import { CURRENCY } from '../constants';
@@ -112,6 +112,26 @@ const Invoices: React.FC = () => {
       alert('حدث خطأ أثناء حفظ الفاتورة');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleConvertToFinal = async (id: string) => {
+    if (!window.confirm('هل أنت متأكد من اعتماد هذه الفاتورة وتحويلها إلى فاتورة نهائية؟ سيتم تغيير حالتها إلى "معلقة".')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ 
+          type: 'ضريبية', 
+          status: 'معلقة' 
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchInvoices();
+    } catch (error) {
+      console.error('Error converting invoice:', error);
+      alert('فشل تحويل الفاتورة');
     }
   };
 
@@ -337,6 +357,15 @@ const Invoices: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                      {inv.type === 'شكلية' && (
+                        <button 
+                          onClick={() => handleConvertToFinal(inv.id)} 
+                          title="اعتماد كفاتورة نهائية" 
+                          className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        >
+                          <FileCheck size={16}/>
+                        </button>
+                      )}
                       <button title="تحميل" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><Download size={16}/></button>
                       <button title="طباعة" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"><Printer size={16}/></button>
                       <button title="عرض التفاصيل" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"><ChevronRight size={16}/></button>

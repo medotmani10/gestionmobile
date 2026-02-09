@@ -140,6 +140,8 @@ export interface Supplier {
   address: string;
   materialType: string;
   totalPurchases: number;
+  totalPaid?: number;
+  balance?: number;
 }
 
 export interface Transport {
