@@ -53,6 +53,7 @@ export interface Client {
   email: string;
   totalProjects: number;
   totalDebt: number;
+  totalPaid?: number; // Calculated on frontend
 }
 
 export interface Worker {
@@ -63,6 +64,27 @@ export interface Worker {
   dailyRate: number;
   currentProject: string;
   isActive: boolean;
+  // Financial properties for UI
+  totalDaysWorked?: number;
+  totalEarned?: number;
+  totalPaid?: number;
+  balance?: number;
+}
+
+export interface Attendance {
+  id: string;
+  workerId: string;
+  date: string;
+  morning: boolean;
+  evening: boolean;
+}
+
+export interface WorkerPayment {
+  id: string;
+  workerId: string;
+  amount: number;
+  date: string;
+  notes: string;
 }
 
 export interface Purchase {
@@ -108,4 +130,23 @@ export interface Transaction {
   status: string;
   type: 'income' | 'expense';
   category?: string;
+  clientId?: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  materialType: string;
+  totalPurchases: number;
+}
+
+export interface Transport {
+  id: string;
+  vehicleType: string;
+  plateNumber: string;
+  driverName: string;
+  phone: string;
+  status: 'نشط' | 'في الصيانة' | 'خارج الخدمة';
 }

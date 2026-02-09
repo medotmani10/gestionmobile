@@ -1,28 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit2, Trash2, Loader2, X, Save } from 'lucide-react';
-import { Project, ProjectStatus } from '../types';
+import { Project, ProjectStatus, Client } from '../types';
 import { supabase } from '../supabase';
 import { CURRENCY } from '../constants';
 
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     name: '',
     client: '',
     budget: 0,
     startDate: '',
     endDate: '',
     status: ProjectStatus.ACTIVE
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
     fetchProjects();
+    fetchClients();
   }, []);
+
+  async function fetchClients() {
+    const { data } = await supabase.from('clients').select('*');
+    if (data) setClients(data as any);
+  }
 
   async function fetchProjects() {
     try {
@@ -50,30 +60,92 @@ const Projects: React.FC = () => {
     }
   }
 
-  const handleAddProject = async (e: React.FormEvent) => {
+  const handleSaveProject = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const { error } = await supabase.from('projects').insert([{
+      let clientName = formData.client.trim();
+      
+      // منطق إنشاء العميل الجديد (فقط عند الإضافة أو إذا تغير الاسم)
+      if (clientName) {
+        const { data: existingClients } = await supabase
+          .from('clients')
+          .select('name')
+          .ilike('name', clientName);
+
+        if (!existingClients || existingClients.length === 0) {
+          await supabase.from('clients').insert([{ name: clientName }]);
+          fetchClients();
+        }
+      }
+
+      const projectPayload = {
         name: formData.name,
-        client: formData.client,
+        client: clientName,
         budget: formData.budget,
         start_date: formData.startDate || null,
         end_date: formData.endDate || null,
         status: formData.status,
-        progress: 0,
-        expenses: 0
-      }]);
+      };
+
+      let error;
+      if (editingId) {
+        // تحديث مشروع موجود
+        const { error: updateError } = await supabase
+          .from('projects')
+          .update(projectPayload)
+          .eq('id', editingId);
+        error = updateError;
+      } else {
+        // إنشاء مشروع جديد
+        const { error: insertError } = await supabase
+          .from('projects')
+          .insert([{ ...projectPayload, progress: 0, expenses: 0 }]);
+        error = insertError;
+      }
+      
       if (error) throw error;
-      setIsModalOpen(false);
-      setFormData({ name: '', client: '', budget: 0, startDate: '', endDate: '', status: ProjectStatus.ACTIVE });
+      
+      closeModal();
       fetchProjects();
     } catch (error) {
       console.error(error);
-      alert('حدث خطأ أثناء الحفظ. يرجى التأكد من البيانات.');
+      alert('حدث خطأ أثناء الحفظ.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا المشروع؟ سيتم حذف جميع البيانات المرتبطة به.')) return;
+
+    try {
+      const { error } = await supabase.from('projects').delete().eq('id', id);
+      if (error) throw error;
+      setProjects(projects.filter(p => p.id !== id));
+    } catch (error) {
+      alert('فشل حذف المشروع');
+      console.error(error);
+    }
+  };
+
+  const handleEdit = (project: Project) => {
+    setFormData({
+      name: project.name,
+      client: project.client,
+      budget: project.budget,
+      startDate: project.startDate || '',
+      endDate: project.endDate || '',
+      status: project.status
+    });
+    setEditingId(project.id);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData(initialFormState);
+    setEditingId(null);
   };
 
   const filteredProjects = projects.filter(p => 
@@ -105,10 +177,10 @@ const Projects: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
             <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-black text-slate-800">إضافة مشروع جديد</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+              <h3 className="font-black text-slate-800">{editingId ? 'تعديل بيانات المشروع' : 'إضافة مشروع جديد'}</h3>
+              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
             </div>
-            <form onSubmit={handleAddProject} className="p-8 space-y-5">
+            <form onSubmit={handleSaveProject} className="p-8 space-y-5">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">اسم المشروع</label>
                 <input required className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/10 transition-all" 
@@ -116,8 +188,21 @@ const Projects: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">العميل المستفيد</label>
-                <input required className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/10 transition-all" 
-                  value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} />
+                <div className="relative">
+                  <input 
+                    required 
+                    list="clients-list"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/10 transition-all" 
+                    value={formData.client} 
+                    onChange={e => setFormData({...formData, client: e.target.value})} 
+                    placeholder="اختر عميل أو اكتب اسم جديد..."
+                  />
+                  <datalist id="clients-list">
+                    {clients.map(c => (
+                      <option key={c.id} value={c.name} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -145,11 +230,13 @@ const Projects: React.FC = () => {
                     value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as ProjectStatus})}>
                     <option value={ProjectStatus.ACTIVE}>نشط</option>
                     <option value={ProjectStatus.PENDING}>قيد الانتظار</option>
+                    <option value={ProjectStatus.COMPLETED}>مكتمل</option>
+                    <option value={ProjectStatus.DELAYED}>متأخر</option>
                   </select>
                 </div>
               </div>
               <button disabled={saving} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 mt-4">
-                {saving ? <Loader2 className="animate-spin" size={20}/> : <><Save size={20}/> تأكيد الإضافة</>}
+                {saving ? <Loader2 className="animate-spin" size={20}/> : <><Save size={20}/> {editingId ? 'حفظ التعديلات' : 'تأكيد الإضافة'}</>}
               </button>
             </form>
           </div>
@@ -167,10 +254,17 @@ const Projects: React.FC = () => {
             <div key={project.id} className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
               <div className="p-8 flex-1">
                 <div className="flex justify-between items-start mb-6">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-600 uppercase tracking-wider`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    project.status === ProjectStatus.ACTIVE ? 'bg-blue-50 text-blue-600' :
+                    project.status === ProjectStatus.COMPLETED ? 'bg-green-50 text-green-600' :
+                    project.status === ProjectStatus.DELAYED ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'
+                  }`}>
                     {project.status}
                   </span>
-                  <button className="text-slate-200 group-hover:text-slate-400 transition-colors"><MoreVertical size={20} /></button>
+                  <div className="flex gap-1">
+                     <button onClick={() => handleEdit(project)} className="p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-blue-600 transition-colors"><Edit2 size={16}/></button>
+                     <button onClick={() => handleDelete(project.id)} className="p-2 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={16}/></button>
+                  </div>
                 </div>
                 <h3 className="text-xl font-black text-slate-800 mb-2 leading-tight">{project.name}</h3>
                 <p className="text-xs text-slate-400 font-medium mb-8">العميل: {project.client}</p>
@@ -201,8 +295,8 @@ const Projects: React.FC = () => {
                    {project.endDate ? new Date(project.endDate).toLocaleDateString('ar-DZ') : 'غير محدد'}
                  </span>
                  <div className="flex gap-2">
-                   <button className="p-2.5 text-slate-400 hover:text-blue-600 bg-white rounded-xl border border-slate-200 shadow-sm transition-all"><Edit2 size={16}/></button>
-                   <button className="p-2.5 text-slate-400 hover:text-red-600 bg-white rounded-xl border border-slate-200 shadow-sm transition-all"><Trash2 size={16}/></button>
+                   <button onClick={() => handleEdit(project)} className="p-2.5 text-slate-400 hover:text-blue-600 bg-white rounded-xl border border-slate-200 shadow-sm transition-all"><Edit2 size={16}/></button>
+                   <button onClick={() => handleDelete(project.id)} className="p-2.5 text-slate-400 hover:text-red-600 bg-white rounded-xl border border-slate-200 shadow-sm transition-all"><Trash2 size={16}/></button>
                  </div>
               </div>
             </div>

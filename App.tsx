@@ -9,6 +9,8 @@ import Finance from './components/Finance';
 import Invoices from './components/Invoices';
 import Purchases from './components/Purchases';
 import Reports from './components/Reports';
+import Suppliers from './components/Suppliers';
+import Transport from './components/Transport';
 import Auth from './components/Auth';
 import { Menu, LogOut, Loader2 } from 'lucide-react';
 import { supabase } from './supabase';
@@ -44,6 +46,8 @@ const App: React.FC = () => {
       case 'projects': return <Projects />;
       case 'clients': return <Clients />;
       case 'workers': return <Workers />;
+      case 'suppliers': return <Suppliers />;
+      case 'transport': return <Transport />;
       case 'finance': return <Finance />;
       case 'invoices': return <Invoices />;
       case 'purchases': return <Purchases />;
@@ -101,6 +105,8 @@ const App: React.FC = () => {
                 {activeTab === 'projects' && 'المشاريع'}
                 {activeTab === 'clients' && 'العملاء'}
                 {activeTab === 'workers' && 'العمال'}
+                {activeTab === 'suppliers' && 'الموردين'}
+                {activeTab === 'transport' && 'النقل والآليات'}
                 {activeTab === 'finance' && 'المالية'}
                 {activeTab === 'invoices' && 'الفواتير'}
                 {activeTab === 'purchases' && 'المشتريات'}

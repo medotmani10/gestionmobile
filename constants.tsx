@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Briefcase, Users, HardHat, FileText, ShoppingCart, DollarSign, PieChart } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, HardHat, FileText, ShoppingCart, DollarSign, PieChart, Truck, Package } from 'lucide-react';
 import { ProjectStatus } from './types';
 
 export const CURRENCY = 'د.ج';
@@ -10,6 +10,8 @@ export const NAV_ITEMS = [
   { id: 'projects', label: 'المشاريع', icon: <Briefcase size={20} /> },
   { id: 'clients', label: 'العملاء', icon: <Users size={20} /> },
   { id: 'workers', label: 'العمال', icon: <HardHat size={20} /> },
+  { id: 'suppliers', label: 'الموردين', icon: <Package size={20} /> },
+  { id: 'transport', label: 'النقل والآليات', icon: <Truck size={20} /> },
   { id: 'finance', label: 'النظام المالي', icon: <DollarSign size={20} /> },
   { id: 'invoices', label: 'الفواتير', icon: <FileText size={20} /> },
   { id: 'purchases', label: 'المشتريات', icon: <ShoppingCart size={20} /> },
