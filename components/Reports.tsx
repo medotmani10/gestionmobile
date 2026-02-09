@@ -2,12 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { BarChart3, FileSpreadsheet, FilePieChart, Download, Calendar, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { CURRENCY } from '../constants';
-import { GoogleGenAI } from "@google/genai";
 
 const Reports: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [reportData, setReportData] = useState({
     avgProgress: 0,
     activeCount: 0,
@@ -40,30 +37,6 @@ const Reports: React.FC = () => {
           totalBudget,
           totalExpenses
         });
-
-        // Gemini AI Analysis Integration
-        try {
-          setAnalyzing(true);
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          const prompt = `بصفتك مستشاراً ذكياً لنظام "بناء برو" لإدارة المشاريع الإنشائية في الجزائر، قم بتحليل إحصائيات المشاريع التالية:
-          - عدد المشاريع النشطة: ${activeProjects.length}
-          - متوسط نسبة الإنجاز: ${Math.round(avgProgress)}%
-          - إجمالي الميزانية: ${totalBudget.toLocaleString()} ${CURRENCY}
-          - إجمالي المصروفات: ${totalExpenses.toLocaleString()} ${CURRENCY}
-          
-          قدم تحليلاً استراتيجياً مقتضباً جداً (حوالي 250 حرف) باللغة العربية يتضمن رؤية للوضع الحالي وتوصية عملية لتحسين الأداء. المخرجات يجب أن تكون نصاً بسيطاً.`;
-
-          const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-          });
-          setAiAnalysis(response.text || '');
-        } catch (aiError) {
-          console.error('Gemini Analysis Error:', aiError);
-          setAiAnalysis('نعتذر، تعذر الحصول على تحليل الذكاء الاصطناعي في الوقت الحالي.');
-        } finally {
-          setAnalyzing(false);
-        }
       }
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -157,24 +130,18 @@ const Reports: React.FC = () => {
 
         <div className="bg-slate-900 p-10 rounded-[40px] shadow-2xl text-white relative overflow-hidden group">
            <div className="relative z-10">
-              <h3 className="text-2xl font-black mb-6">الذكاء الاصطناعي والتحليل</h3>
+              <h3 className="text-2xl font-black mb-6">التحليل التلقائي</h3>
               <p className="text-slate-400 text-sm mb-10 leading-loose min-h-[80px]">
-                {analyzing ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="animate-spin" size={16} /> جاري تحليل المعطيات التشغيلية...
-                  </span>
-                ) : (
-                  aiAnalysis || `بناءً على المعطيات الحقيقية لـ ${reportData.activeCount} مشاريع، نلاحظ أن معدل الإنجاز (${reportData.avgProgress}%) يتماشى مع المصاريف التشغيلية. النظام الجزائري "بناء برو" يقترح عليك موازنة المشتريات لتقليل تكاليف المواد.`
-                )}
+                بناءً على المعطيات الحقيقية لـ {reportData.activeCount} مشاريع، نلاحظ أن معدل الإنجاز ({reportData.avgProgress}%) يتماشى مع المصاريف التشغيلية. النظام الجزائري "بناء برو" يقترح عليك موازنة المشتريات لتقليل تكاليف المواد.
               </p>
               <div className="grid grid-cols-2 gap-4">
                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 group-hover:bg-white/10 transition-all">
                     <p className="text-[10px] text-blue-400 font-bold mb-1">الرؤية</p>
-                    <p className="text-xs font-medium truncate">{analyzing ? 'تحليل...' : 'استقرار مالي جيد'}</p>
+                    <p className="text-xs font-medium truncate">استقرار مالي جيد</p>
                  </div>
                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 group-hover:bg-white/10 transition-all">
                     <p className="text-[10px] text-green-400 font-bold mb-1">التوصية</p>
-                    <p className="text-xs font-medium truncate">{analyzing ? 'تقييم...' : 'تحسين المشتريات'}</p>
+                    <p className="text-xs font-medium truncate">تحسين المشتريات</p>
                  </div>
               </div>
            </div>
