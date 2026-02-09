@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart3, FileSpreadsheet, FilePieChart, Download, Calendar, Loader2 } from 'lucide-react';
+import { BarChart3, FileSpreadsheet, FilePieChart, Download, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { CURRENCY } from '../constants';
 
