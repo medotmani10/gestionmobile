@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, MoreVertical, Edit2, Trash2, Loader2, X, Save } from 'lucide-react';
 import { Project, ProjectStatus } from '../types';
@@ -59,8 +58,8 @@ const Projects: React.FC = () => {
         name: formData.name,
         client: formData.client,
         budget: formData.budget,
-        start_date: formData.startDate,
-        end_date: formData.endDate,
+        start_date: formData.startDate || null,
+        end_date: formData.endDate || null,
         status: formData.status,
         progress: 0,
         expenses: 0
@@ -70,7 +69,8 @@ const Projects: React.FC = () => {
       setFormData({ name: '', client: '', budget: 0, startDate: '', endDate: '', status: ProjectStatus.ACTIVE });
       fetchProjects();
     } catch (error) {
-      alert('حدث خطأ أثناء الحفظ');
+      console.error(error);
+      alert('حدث خطأ أثناء الحفظ. يرجى التأكد من البيانات.');
     } finally {
       setSaving(false);
     }
@@ -119,6 +119,20 @@ const Projects: React.FC = () => {
                 <input required className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/10 transition-all" 
                   value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} />
               </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تاريخ البداية</label>
+                  <input type="date" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm"
+                    value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تاريخ النهاية</label>
+                  <input type="date" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm"
+                    value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الميزانية ({CURRENCY})</label>
@@ -183,7 +197,9 @@ const Projects: React.FC = () => {
                 </div>
               </div>
               <div className="bg-slate-50/50 px-8 py-5 flex justify-between items-center border-t border-slate-100">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(project.endDate).toLocaleDateString('ar-DZ')}</span>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                   {project.endDate ? new Date(project.endDate).toLocaleDateString('ar-DZ') : 'غير محدد'}
+                 </span>
                  <div className="flex gap-2">
                    <button className="p-2.5 text-slate-400 hover:text-blue-600 bg-white rounded-xl border border-slate-200 shadow-sm transition-all"><Edit2 size={16}/></button>
                    <button className="p-2.5 text-slate-400 hover:text-red-600 bg-white rounded-xl border border-slate-200 shadow-sm transition-all"><Trash2 size={16}/></button>
