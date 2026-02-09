@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Search, Phone, Mail, MapPin, MoreHorizontal, Loader2, X, Save } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Client } from '../types';
+import { CURRENCY } from '../constants';
 
 const Clients: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -146,7 +146,7 @@ const Clients: React.FC = () => {
                 <div>
                   <p className="text-[9px] text-slate-400 font-black uppercase mb-1 tracking-widest">المديونية</p>
                   <p className={`font-bold ${Number(client.totalDebt) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    SAR {Number(client.totalDebt || 0).toLocaleString()}
+                    {Number(client.totalDebt || 0).toLocaleString()} {CURRENCY}
                   </p>
                 </div>
               </div>

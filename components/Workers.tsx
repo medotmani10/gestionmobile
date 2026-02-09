@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { UserPlus, HardHat, CheckCircle, XCircle, Loader2, X, Save } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Worker } from '../types';
+import { CURRENCY } from '../constants';
 
 const Workers: React.FC = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
@@ -108,7 +108,7 @@ const Workers: React.FC = () => {
                     value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500">اليومية (SAR)</label>
+                  <label className="text-xs font-bold text-slate-500">اليومية ({CURRENCY})</label>
                   <input type="number" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-left" dir="ltr"
                     value={formData.daily_rate} onChange={e => setFormData({...formData, daily_rate: Number(e.target.value)})} />
                 </div>
@@ -132,7 +132,7 @@ const Workers: React.FC = () => {
                   <th className="px-6 py-4 font-bold">العامل</th>
                   <th className="px-6 py-4 font-bold">التخصص</th>
                   <th className="px-6 py-4 font-bold">المشروع الحالي</th>
-                  <th className="px-6 py-4 font-bold">اليومية (SAR)</th>
+                  <th className="px-6 py-4 font-bold">اليومية ({CURRENCY})</th>
                   <th className="px-6 py-4 font-bold">الحالة</th>
                   <th className="px-6 py-4 font-bold">الإجراءات</th>
                 </tr>
@@ -153,7 +153,7 @@ const Workers: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-slate-600">{worker.trade}</td>
                     <td className="px-6 py-4 text-slate-600">{worker.currentProject || '-'}</td>
-                    <td className="px-6 py-4 font-bold text-slate-700">{worker.dailyRate}</td>
+                    <td className="px-6 py-4 font-bold text-slate-700">{worker.dailyRate.toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${
                         worker.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'

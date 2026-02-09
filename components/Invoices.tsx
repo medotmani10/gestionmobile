@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Download, Printer, Filter, Trash2, Save, FileText, ChevronRight, Loader2 } from 'lucide-react';
 import { Invoice, InvoiceItem, InvoiceType, Client } from '../types';
 import { supabase } from '../supabase';
+import { CURRENCY } from '../constants';
 
 const Invoices: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -62,7 +62,7 @@ const Invoices: React.FC = () => {
     
     setSaving(true);
     const subTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
-    const tax = subTotal * 0.15;
+    const tax = subTotal * 0.19; // Updated VAT to 19% for Algerian context
     const total = subTotal + tax;
 
     try {
@@ -137,7 +137,7 @@ const Invoices: React.FC = () => {
   };
 
   const subTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
-  const tax = subTotal * 0.15; 
+  const tax = subTotal * 0.19; // Updated VAT to 19%
   const total = subTotal + tax;
 
   return (
@@ -268,15 +268,15 @@ const Invoices: React.FC = () => {
               <div className="flex gap-8 text-right w-full md:w-auto">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">الإجمالي قبل الضريبة</p>
-                  <p className="text-lg font-bold text-slate-700">SAR {subTotal.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-slate-700">{subTotal.toLocaleString()} {CURRENCY}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">الضريبة (15%)</p>
-                  <p className="text-lg font-bold text-slate-500">SAR {tax.toLocaleString()}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">الضريبة (19%)</p>
+                  <p className="text-lg font-bold text-slate-500">{tax.toLocaleString()} {CURRENCY}</p>
                 </div>
                 <div className="border-r border-slate-200 pr-8">
                   <p className="text-[10px] font-bold text-blue-600 uppercase">الصافي النهائي</p>
-                  <p className="text-2xl font-black text-blue-600">SAR {total.toLocaleString()}</p>
+                  <p className="text-2xl font-black text-blue-600">{total.toLocaleString()} {CURRENCY}</p>
                 </div>
               </div>
               <div className="flex gap-3 w-full md:w-auto">
@@ -325,7 +325,7 @@ const Invoices: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 font-medium text-slate-700">{inv.client}</td>
-                  <td className="px-6 py-4 font-bold text-slate-900">SAR {inv.amount.toLocaleString()}</td>
+                  <td className="px-6 py-4 font-bold text-slate-900">{inv.amount.toLocaleString()} {CURRENCY}</td>
                   <td className="px-6 py-4 text-slate-400 text-xs">{inv.date}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${

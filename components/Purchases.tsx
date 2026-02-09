@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { ShoppingBag, Search, Filter, Truck, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Purchase } from '../types';
+import { CURRENCY } from '../constants';
 
 const Purchases: React.FC = () => {
   const [items, setItems] = useState<Purchase[]>([]);
@@ -58,7 +58,7 @@ const Purchases: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <p className="text-xs text-slate-400 mb-1">إجمالي المشتريات</p>
-          <p className="text-2xl font-black text-slate-800">SAR {totalPurchases.toLocaleString()}</p>
+          <p className="text-2xl font-black text-slate-800">{totalPurchases.toLocaleString()} {CURRENCY}</p>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <p className="text-xs text-slate-400 mb-1">طلبات بانتظار الاستلام</p>
@@ -102,7 +102,7 @@ const Purchases: React.FC = () => {
                     <td className="px-6 py-4 text-slate-600">{po.project}</td>
                     <td className="px-6 py-4 font-medium">{po.item}</td>
                     <td className="px-6 py-4 text-slate-500">{po.quantity}</td>
-                    <td className="px-6 py-4 font-bold text-slate-700">SAR {po.total?.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-bold text-slate-700">{po.total?.toLocaleString()} {CURRENCY}</td>
                     <td className="px-6 py-4 text-blue-600 text-xs font-bold underline cursor-pointer">{po.supplier}</td>
                     <td className="px-6 py-4">
                       <span className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold w-fit ${
