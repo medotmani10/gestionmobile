@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { UserPlus, HardHat, CheckCircle, XCircle, Loader2, X, Save, Edit2, Trash2, CalendarCheck, Coins, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { UserPlus, HardHat, CheckCircle, XCircle, Loader2, X, Save, Edit2, Trash2, CalendarCheck, Coins, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Worker, Attendance, WorkerPayment } from '../types';
 import { CURRENCY } from '../constants';
@@ -335,14 +335,17 @@ const Workers: React.FC = () => {
           <div className="p-6">
              <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
               <h3 className="font-bold text-slate-800">سجل الحضور اليومي</h3>
-              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                <span className="text-xs font-bold text-slate-500 px-2">تاريخ:</span>
-                <input 
-                  type="date" 
-                  value={attendanceDate}
-                  onChange={(e) => setAttendanceDate(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-lg px-3 py-1 text-sm outline-none focus:border-blue-500"
-                />
+              <div className="relative">
+                <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  <span className="text-xs font-bold text-slate-500 px-2">تاريخ:</span>
+                  <input 
+                    type="date" 
+                    value={attendanceDate}
+                    onChange={(e) => setAttendanceDate(e.target.value)}
+                    className="bg-white border border-slate-200 rounded-lg px-3 py-1 text-sm outline-none focus:border-blue-500 pl-8"
+                  />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                </div>
               </div>
             </div>
             
@@ -496,8 +499,11 @@ const Workers: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">التاريخ</label>
-                <input type="date" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl" 
-                  value={paymentData.date} onChange={e => setPaymentData({...paymentData, date: e.target.value})} />
+                <div className="relative">
+                  <input type="date" required className="w-full p-3 pl-10 bg-slate-50 border border-slate-200 rounded-xl" 
+                    value={paymentData.date} onChange={e => setPaymentData({...paymentData, date: e.target.value})} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">ملاحظات (سلفة / راتب)</label>

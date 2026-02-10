@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShoppingBag, Search, Filter, Truck, CheckCircle2, Clock, Loader2, Plus, X, Save, Edit2, Trash2 } from 'lucide-react';
+import { ShoppingBag, Search, Filter, Truck, CheckCircle2, Clock, Loader2, Plus, X, Save, Edit2, Trash2, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Purchase } from '../types';
 import { CURRENCY } from '../constants';
@@ -280,8 +280,11 @@ const Purchases: React.FC = () => {
                  </div>
                  <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500">تاريخ الطلب</label>
-                    <input type="date" required className="w-full p-3 bg-slate-50 border rounded-xl text-sm" 
-                      value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                    <div className="relative">
+                      <input type="date" required className="w-full p-3 pl-10 bg-slate-50 border rounded-xl text-sm" 
+                        value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                    </div>
                  </div>
               </div>
 

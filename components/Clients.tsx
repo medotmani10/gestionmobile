@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Search, Phone, Mail, Edit2, Trash2, Loader2, X, Save, ArrowDownLeft, Coins } from 'lucide-react';
+import { UserPlus, Search, Phone, Mail, Edit2, Trash2, Loader2, X, Save, ArrowDownLeft, Coins, FileText, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Client } from '../types';
 import { CURRENCY } from '../constants';
@@ -23,7 +23,8 @@ const Clients: React.FC = () => {
     name: '',
     phone: '',
     email: '',
-    address: ''
+    address: '',
+    notes: ''
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -129,7 +130,8 @@ const Clients: React.FC = () => {
       name: client.name,
       phone: client.phone || '',
       email: client.email || '',
-      address: client.address || ''
+      address: client.address || '',
+      notes: client.notes || ''
     });
     setEditingId(client.id);
     setIsModalOpen(true);
@@ -197,7 +199,7 @@ const Clients: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClients.map(client => (
-            <div key={client.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all group flex flex-col">
+            <div key={client.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all group flex flex-col h-full">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-xl group-hover:scale-110 transition-transform">
                   {client.name.charAt(0)}
@@ -234,6 +236,13 @@ const Clients: React.FC = () => {
                    <Coins size={20} />
                  </button>
                </div>
+               
+               {client.notes && (
+                 <div className="mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500 bg-slate-50/50 p-3 rounded-lg flex gap-2">
+                   <FileText size={14} className="flex-shrink-0 mt-0.5 text-slate-400" />
+                   <p className="line-clamp-2">{client.notes}</p>
+                 </div>
+               )}
             </div>
           ))}
         </div>
@@ -251,6 +260,15 @@ const Clients: React.FC = () => {
               <input required placeholder="الاسم" className="w-full p-3 bg-slate-50 border rounded-xl" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               <input required placeholder="الهاتف" className="w-full p-3 bg-slate-50 border rounded-xl" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
               <input placeholder="العنوان" className="w-full p-3 bg-slate-50 border rounded-xl" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+              <div>
+                <label className="text-xs font-bold text-slate-500 mb-1 block">ملاحظات</label>
+                <textarea 
+                  placeholder="ملاحظات إضافية حول العميل..." 
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[80px]" 
+                  value={formData.notes} 
+                  onChange={e => setFormData({...formData, notes: e.target.value})} 
+                />
+              </div>
               <button disabled={saving} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex justify-center gap-2">
                 {saving ? <Loader2 className="animate-spin"/> : <Save size={18}/>} حفظ
               </button>
@@ -278,8 +296,11 @@ const Clients: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">التاريخ</label>
-                <input type="date" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl" 
-                  value={paymentData.date} onChange={e => setPaymentData({...paymentData, date: e.target.value})} />
+                <div className="relative">
+                  <input type="date" required className="w-full p-3 pl-10 bg-slate-50 border border-slate-200 rounded-xl" 
+                    value={paymentData.date} onChange={e => setPaymentData({...paymentData, date: e.target.value})} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">ملاحظات</label>

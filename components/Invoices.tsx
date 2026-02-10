@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Download, Printer, Filter, Trash2, Save, FileText, ChevronRight, Loader2, FileCheck } from 'lucide-react';
+import { Plus, Download, Printer, Filter, Trash2, Save, FileText, ChevronRight, Loader2, FileCheck, Calendar } from 'lucide-react';
 import { Invoice, InvoiceItem, InvoiceType, Client } from '../types';
 import { supabase } from '../supabase';
 import { CURRENCY } from '../constants';
@@ -381,12 +381,15 @@ const Invoices: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 mr-1">تاريخ الاستحقاق</label>
-                  <input 
-                    type="date" 
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" 
-                  />
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="w-full p-3 pl-10 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" 
+                    />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                  </div>
                 </div>
               </div>
 

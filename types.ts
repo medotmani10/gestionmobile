@@ -54,6 +54,7 @@ export interface Client {
   totalProjects: number;
   totalDebt: number;
   totalPaid?: number; // Calculated on frontend
+  notes?: string;
 }
 
 export interface Worker {
@@ -142,6 +143,7 @@ export interface Supplier {
   totalPurchases: number;
   totalPaid?: number;
   balance?: number;
+  notes?: string;
 }
 
 export interface Transport {

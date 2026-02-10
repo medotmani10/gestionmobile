@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreVertical, Edit2, Trash2, Loader2, X, Save } from 'lucide-react';
+import { Plus, Search, MoreVertical, Edit2, Trash2, Loader2, X, Save, Calendar } from 'lucide-react';
 import { Project, ProjectStatus, Client } from '../types';
 import { supabase } from '../supabase';
 import { CURRENCY } from '../constants';
@@ -208,13 +208,27 @@ const Projects: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تاريخ البداية</label>
-                  <input type="date" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm"
-                    value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} />
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="w-full p-4 pl-10 bg-slate-50 border border-slate-200 rounded-2xl text-sm"
+                      value={formData.startDate} 
+                      onChange={e => setFormData({...formData, startDate: e.target.value})} 
+                    />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تاريخ النهاية</label>
-                  <input type="date" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm"
-                    value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} />
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="w-full p-4 pl-10 bg-slate-50 border border-slate-200 rounded-2xl text-sm"
+                      value={formData.endDate} 
+                      onChange={e => setFormData({...formData, endDate: e.target.value})} 
+                    />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                  </div>
                 </div>
               </div>
 

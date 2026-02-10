@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Phone, MapPin, Loader2, X, Save, Building, Edit2, Trash2, Coins, Wallet, ArrowUpRight } from 'lucide-react';
+import { Package, Search, Phone, MapPin, Loader2, X, Save, Building, Edit2, Trash2, Coins, Wallet, ArrowUpRight, FileText, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Supplier } from '../types';
 import { CURRENCY } from '../constants';
@@ -22,7 +22,8 @@ const Suppliers: React.FC = () => {
     name: '',
     phone: '',
     address: '',
-    materialType: ''
+    materialType: '',
+    notes: ''
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -73,6 +74,7 @@ const Suppliers: React.FC = () => {
           phone: s.phone,
           address: s.address,
           materialType: s.material_type,
+          notes: s.notes,
           totalPurchases: totalPurchased,
           totalPaid: totalPaid,
           balance: totalPurchased - totalPaid // Positive means we owe them
@@ -97,7 +99,8 @@ const Suppliers: React.FC = () => {
         name: formData.name,
         phone: formData.phone,
         address: formData.address,
-        material_type: formData.materialType
+        material_type: formData.materialType,
+        notes: formData.notes
       };
 
       if (editingId) {
@@ -133,7 +136,8 @@ const Suppliers: React.FC = () => {
       name: supplier.name,
       phone: supplier.phone || '',
       address: supplier.address || '',
-      materialType: supplier.materialType || ''
+      materialType: supplier.materialType || '',
+      notes: supplier.notes || ''
     });
     setEditingId(supplier.id);
     setIsModalOpen(true);
@@ -241,7 +245,7 @@ const Suppliers: React.FC = () => {
           {activeTab === 'list' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredSuppliers.map(supplier => (
-                <div key={supplier.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
+                <div key={supplier.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all group flex flex-col h-full">
                   <div className="flex justify-between items-start mb-6">
                     <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
                       <Building size={24} />
@@ -267,13 +271,20 @@ const Suppliers: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-50 pt-4 flex justify-between items-center">
+                  <div className="border-t border-slate-50 pt-4 flex justify-between items-center mt-auto">
                     <div>
                        <p className="text-[9px] text-slate-400 font-black uppercase mb-1 tracking-widest">إجمالي المشتريات</p>
                        <p className="font-bold text-slate-700">{supplier.totalPurchases?.toLocaleString()} {CURRENCY}</p>
                     </div>
                     <button onClick={() => { setActiveTab('finance'); }} className="text-xs font-bold text-blue-600 hover:underline">عرض الحساب</button>
                   </div>
+                  
+                  {supplier.notes && (
+                    <div className="mt-4 pt-4 border-t border-slate-50 text-xs text-slate-500 bg-slate-50/50 p-3 rounded-lg flex gap-2">
+                      <FileText size={14} className="flex-shrink-0 mt-0.5 text-slate-400" />
+                      <p className="line-clamp-2">{supplier.notes}</p>
+                    </div>
+                  )}
                 </div>
               ))}
               {filteredSuppliers.length === 0 && (
@@ -356,6 +367,15 @@ const Suppliers: React.FC = () => {
                 <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" 
                   value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
               </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 mb-1 block">ملاحظات</label>
+                <textarea 
+                  placeholder="ملاحظات إضافية حول المورد..." 
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[80px]" 
+                  value={formData.notes} 
+                  onChange={e => setFormData({...formData, notes: e.target.value})} 
+                />
+              </div>
               <button disabled={saving} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all mt-4">
                 {saving ? <Loader2 className="animate-spin" size={20}/> : <><Save size={18}/> {editingId ? 'حفظ التعديلات' : 'حفظ البيانات'}</>}
               </button>
@@ -383,8 +403,11 @@ const Suppliers: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">التاريخ</label>
-                <input type="date" required className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl" 
-                  value={paymentData.date} onChange={e => setPaymentData({...paymentData, date: e.target.value})} />
+                <div className="relative">
+                  <input type="date" required className="w-full p-3 pl-10 bg-slate-50 border border-slate-200 rounded-xl" 
+                    value={paymentData.date} onChange={e => setPaymentData({...paymentData, date: e.target.value})} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">ملاحظات</label>
